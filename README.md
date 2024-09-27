@@ -34,7 +34,7 @@ The infrastructure for the dynamic website includes the following AWS services:
 - **S3** for storing the application code and assets.
 - **Route 53** for domain registration and DNS management.
 
-![Architecture Diagram](link-to-diagram)
+![Alt text](/Host_a_Dynamic_Web_App_on_AWS.png)
 
 ---
 
@@ -136,8 +136,3 @@ The goal of this project was to create a secure, scalable, and highly available 
 
 ## Contributing
 Contributions are welcome! Please fork the repository, create a feature branch, and submit a pull request.
-
----
-
-## License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
