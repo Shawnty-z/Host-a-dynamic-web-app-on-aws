@@ -16,7 +16,6 @@ The website architecture includes resources like VPCs, EC2 instances, Security G
 6. [Usage](#usage)
 7. [Deployment](#deployment)
 8. [Contributing](#contributing)
-9. [License](#license)
 
 ---
 
