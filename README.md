@@ -1,137 +1,122 @@
 # Host-a-dynamic-web-app-on-aws
 
-## Description
-This project demonstrates how to build a scalable, secure, and highly available dynamic website using various AWS services. The website is hosted on EC2 instances within a private subnet for enhanced security, with public-facing components like a Load Balancer and NAT Gateway to manage traffic and provide secure connectivity. This project integrates best practices for high availability, fault tolerance, and security.
+## Project Overview
 
-The website architecture includes resources like VPCs, EC2 instances, Security Groups, Auto Scaling Groups, and more. The project also provides automated notifications for system events and uses S3 for storing application code.
-
----
-
-## Table of Contents
-1. [Architecture](#architecture)
-2. [Technologies Used](#technologies-used)
-3. [Problem Solved](#problem-solved)
-4. [Challenges Faced & Solutions](#challenges-faced--solutions)
-5. [Setup and Installation](#setup-and-installation)
-6. [Usage](#usage)
-7. [Deployment](#deployment)
-8. [Contributing](#contributing)
-
----
-
-## Architecture
-The infrastructure for the dynamic website includes the following AWS services:
-- **VPC** with both public and private subnets across two availability zones.
-- **Internet Gateway** for allowing the VPC instances to connect to the internet.
-- **Security Groups** as a firewall mechanism to control inbound and outbound traffic.
-- **EC2 Instances** hosted in private subnets to serve the dynamic website.
-- **Application Load Balancer (ALB)** to distribute traffic across EC2 instances in multiple availability zones.
-- **NAT Gateway** to allow instances in private subnets to access the internet.
-- **Auto Scaling Group (ASG)** to dynamically manage the EC2 instances for scalability and fault tolerance.
-- **Amazon Certificate Manager (ACM)** to secure website communications via SSL.
-- **Simple Notification Service (SNS)** to provide notifications about changes in the Auto Scaling Group.
-- **S3** for storing the application code and assets.
-- **Route 53** for domain registration and DNS management.
+This project involves hosting a dynamic website on AWS using multiple AWS services and resources such as EC2, RDS, S3, Route 53, and more. The project was designed to demonstrate the full lifecycle of deploying a web application in a scalable and secure cloud environment. Below is the architecture used for this deployment:
 
 ![Alt text](/Host_a_Dynamic_Web_App_on_AWS.jpg)
 
----
+## Architecture Breakdown
 
-## Technologies Used
-- **AWS EC2**: Web hosting with security enhancements.
-- **AWS VPC**: Custom network environment with public/private subnets.
-- **Amazon S3**: Storage for web application code.
-- **Amazon Route 53**: DNS management and domain registration.
-- **AWS Application Load Balancer (ALB)**: Load balancing across EC2 instances.
-- **AWS Auto Scaling Group (ASG)**: Automatic scaling of EC2 instances.
-- **AWS Certificate Manager (ACM)**: SSL certificate management.
-- **AWS SNS**: Alerts and notifications for system changes.
-- **Apache**: Web server on EC2 instances.
-- **MySQL**: Relational database for the dynamic content.
-- **PHP**: Server-side language for dynamic web pages.
-- **Bash**: Scripting for automated deployment.
-
----
+1. **Amazon Route 53**: Used for DNS routing.
+2. **VPC with Public and Private Subnets**: Segregating web and database layers for enhanced security.
+3. **NAT Gateway**: To allow EC2 instances in private subnets to access the internet securely.
+4. **EC2 Instances**: Web servers hosted in an auto-scaling group.
+5. **Application Load Balancer**: Ensuring high availability and distributing incoming traffic across multiple EC2 instances.
+6. **Amazon RDS**: MySQL relational database deployed in private subnets, with a standby instance for failover.
+7. **Amazon S3**: Hosting static assets such as media files and serving as a backup storage location.
+8. **EC2 Instance Connect Endpoint**: Used for secure access to private EC2 instances.
+9. **IAM Roles**: To manage access and permissions to resources.
 
 ## Problem Solved
-The goal of this project was to create a secure, scalable, and highly available dynamic website using a cloud-native infrastructure. The architecture leverages AWS to solve common problems such as:
 
-- **Security**: EC2 instances are placed in private subnets with an Application Load Balancer in the public subnets, minimizing exposure to direct internet traffic.
-- **Scalability**: The Auto Scaling Group ensures the website can handle varying amounts of traffic by adding or removing EC2 instances as needed.
-- **High Availability**: Utilizing two Availability Zones and the Application Load Balancer ensures that the website remains available even if one Availability Zone fails.
-- **Automated Monitoring**: With SNS integration, administrators are notified in real time about system changes or potential issues, ensuring rapid response to scaling events.
+The project demonstrates the complete workflow of deploying a dynamic web application in AWS. It solves key challenges such as:
 
----
+- **Scalability**: Using an Auto Scaling Group ensures that the web application can handle variable loads by scaling in and out based on demand.
+- **High Availability**: Leveraging multiple Availability Zones for both the web and database tiers ensures that the application remains highly available, even if one zone experiences issues.
+- **Security**: By separating web servers into public subnets and databases into private subnets, we mitigate potential attack vectors. Additionally, security groups and IAM roles tightly control access to resources.
+- **Automation**: Using a Bash script to automate the installation of necessary software and synchronization of files from S3 ensures that the deployment is repeatable and reduces manual intervention.
 
-## Challenges Faced & Solutions
-### 1. **Issue**: Difficulty in connecting securely to the EC2 instances in private subnets.
-   **Solution**: Implemented EC2 Instance Connect Endpoint, allowing secure access to instances within both public and private subnets. This reduced the need for using bastion hosts or exposing SSH ports publicly.
+## Bash Deployment Script
 
-### 2. **Issue**: Ensuring secure communication between the website and the end-users.
-   **Solution**: Configured AWS Certificate Manager (ACM) to issue and manage SSL certificates for the Application Load Balancer. This enabled HTTPS communication, enhancing the security of the website.
+```bash
+#!/bin/bash
 
-### 3. **Issue**: Web servers in private subnets needed internet access for software updates.
-   **Solution**: Deployed a NAT Gateway in the public subnet to allow outbound internet access for instances in private subnets, while keeping inbound traffic controlled and secure.
+# Update server packages
+sudo yum update -y
 
-### 4. **Issue**: Dynamic scaling of EC2 instances in response to traffic surges.
-   **Solution**: Used an Auto Scaling Group that adjusts the number of EC2 instances based on traffic demand, ensuring the website remains available and responsive during high traffic periods.
+# Install Apache Web Server and start it
+sudo yum install -y httpd
+sudo systemctl enable httpd 
+sudo systemctl start httpd
 
----
+# Install PHP and necessary extensions
+sudo dnf install -y \
+php \
+php-pdo \
+php-openssl \
+php-mbstring \
+php-exif \
+php-fileinfo \
+php-xml \
+php-ctype \
+php-json \
+php-tokenizer \
+php-curl \
+php-cli \
+php-fpm \
+php-mysqlnd \
+php-bcmath \
+php-gd \
+php-cgi \
+php-gettext \
+php-intl \
+php-zip
 
-## Setup and Installation
+# Install MySQL 8
+sudo wget https://dev.mysql.com/get/mysql80-community-release-el9-1.noarch.rpm 
+sudo dnf install -y mysql80-community-release-el9-1.noarch.rpm
+sudo rpm --import https://repo.mysql.com/RPM-GPG-KEY-mysql-2023
+dnf repolist enabled | grep "mysql.*-community.*"
+sudo dnf install -y mysql-community-server 
+sudo systemctl start mysqld
+sudo systemctl enable mysqld
 
-### Prerequisites
-- AWS CLI installed and configured.
-- EC2 Instance with required IAM roles and policies.
-- Amazon Route 53 domain registered.
-- S3 bucket for hosting the application files.
+# Enable mod_rewrite for Apache
+sudo sed -i '/<Directory "\/var\/www\/html">/,/<\/Directory>/ s/AllowOverride None/AllowOverride All/' /etc/httpd/conf/httpd.conf
 
-### Installation
-1. **Clone the Repository:**
-   ```bash
-   git clone https://github.com/yourusername/yourproject.git
-   cd yourproject
-   ```
+# Define S3 bucket name and sync the application code
+S3_BUCKET_NAME=dynamic-web-files
+sudo aws s3 sync s3://"$S3_BUCKET_NAME" /var/www/html
 
-2. **Install EC2 and MySQL Setup Script:**
-   Upload the following script to the EC2 instance via SSH or SSM.
+# Navigate to web server's root directory and unzip application code
+cd /var/www/html
+sudo unzip shopwise.zip
+sudo cp -R shopwise/. /var/www/html/
+sudo rm -rf shopwise shopwise.zip
 
-   ```bash
-   #!/bin/bash
-   sudo yum update -y
-   sudo yum install -y httpd
-   sudo systemctl enable httpd 
-   sudo systemctl start httpd
-   sudo dnf install -y php mysql-community-server
-   sudo systemctl start mysqld
-   sudo systemctl enable mysqld
-   sudo aws s3 sync s3://dynamic-web-files /var/www/html
-   ```
+# Set permissions for web files and restart Apache
+sudo chmod -R 777 /var/www/html
+sudo chmod -R 777 storage/
+sudo service httpd restart
+```
 
-3. **Edit the .env File:**
-   Provide your database credentials in the `.env` file after copying the application code to `/var/www/html`.
+## Issues Faced and Solutions
 
-4. **Start the Web Application:**
-   After the configuration, restart the Apache server.
-   ```bash
-   sudo service httpd restart
-   ```
+### 1. **Issue: Installing MySQL 8 on EC2 instance**
+   - During the setup, I encountered difficulties installing the correct version of MySQL, specifically version 8.
+   - **Solution**: To solve this, I used the `wget` command to download and install the MySQL community repository, which enabled me to install the correct version of MySQL and start the database service.
 
----
+### 2. **Issue: Permissions Problem with Apache**
+   - After uploading the application files to the EC2 instance, I ran into permission issues that prevented Apache from accessing certain files.
+   - **Solution**: The issue was resolved by setting the correct file permissions using the `chmod -R 777 /var/www/html` command for the web directory and restarting the Apache service.
 
-## Usage
-- **Domain Name**: Access the website using the domain registered via Route 53.
-- **Auto Scaling**: The website will automatically scale to handle traffic spikes based on the Auto Scaling Group configuration.
-- **Secure Communication**: Communication is encrypted via HTTPS using a certificate from AWS Certificate Manager.
+### 3. **Issue: Automating deployment with S3 Sync**
+   - Synchronizing the web application files from S3 to the EC2 instance posed a challenge initially, especially with file extraction and permission settings.
+   - **Solution**: I automated the entire process by incorporating `aws s3 sync` in the deployment script, followed by unzipping and setting correct permissions for the web files.
 
----
+## Key Takeaways
 
-## Deployment
-1. **Prepare Infrastructure**: Launch the resources (VPC, Subnets, Load Balancer, etc.) using AWS CloudFormation or Terraform (optional).
-2. **Deploy Application**: Sync the application code from the S3 bucket to the EC2 instances.
-3. **Enable Auto Scaling**: Set up the Auto Scaling Group to ensure high availability and scalability.
+- The project successfully demonstrated the power of AWS services in deploying a dynamic, scalable, and secure web application.
+- Automation using Bash scripting helped streamline the setup and configuration process, reducing the chances of manual errors.
+- Incorporating AWS best practices such as multi-AZ deployments, secure VPC setups, and least privilege access via IAM enhanced the robustness and security of the system.
 
----
+## Future Improvements
 
-## Contributing
-Contributions are welcome! Please fork the repository, create a feature branch, and submit a pull request.
+- **CI/CD Pipeline**: Implementing a CI/CD pipeline using AWS CodePipeline or Jenkins for automatic deployment on code changes.
+- **Monitoring**: Integrating CloudWatch for enhanced monitoring and alerting on system performance and errors.
+- **Backup & Restore**: Setting up automatic backups for the RDS instance for data durability.
+
+## Conclusion
+
+This project provided a hands-on experience in designing, deploying, and managing a web application on AWS. The challenges faced helped strengthen my understanding of various AWS services and how they can be used to solve real-world problems.
